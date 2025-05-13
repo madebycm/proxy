@@ -1,6 +1,6 @@
 # MITM Proxy Tool
 
-A simple tool for intercepting and monitoring HTTP/HTTPS traffic on macOS using mitmproxy.
+A simple tool for intercepting and monitoring HTTP/HTTPS traffic on macOS using mitmproxy. Provides easy-to-use commands for starting, stopping, and monitoring proxy traffic with minimal or detailed output.
 
 ## Overview
 
@@ -14,6 +14,8 @@ This tool sets up a man-in-the-middle proxy on your local machine, configures yo
 - Clean shutdown and system restoration
 - Live monitoring modes with real-time output
 - URL-only view for minimal output
+- Automatic port detection to avoid conflicts
+- Single unified command interface
 
 ## Requirements
 
@@ -42,7 +44,7 @@ This tool sets up a man-in-the-middle proxy on your local machine, configures yo
 
 ## Usage
 
-The tool now uses a unified script with multiple commands and options:
+The tool uses a unified script with multiple commands and options:
 
 ```bash
 ./proxy.sh [command] [options]
@@ -61,6 +63,17 @@ The tool now uses a unified script with multiple commands and options:
 - `-p, --port PORT` - Specify a custom port (default: 4545)
 - `-a, --auto` - Automatically find an available port if the default is in use (on by default)
 - `-v, --verbose` - Show detailed output (for 'live' mode)
+
+### Quick Reference
+
+```bash
+./proxy.sh                 # Start in default mode (URL-only view)
+./proxy.sh live            # Same as above
+./proxy.sh live --verbose  # Start with detailed output
+./proxy.sh start           # Start in background mode
+./proxy.sh stop            # Stop the proxy
+./proxy.sh --port 8080     # Use a specific port
+```
 
 ### Starting the Proxy
 
@@ -138,11 +151,12 @@ This will:
 
 - **No traffic in logs**: Make sure the certificate is properly installed and trusted
 - **Certificate issues**: Delete any existing mitmproxy certificates in Keychain Access and reinstall
-- **Proxy not starting**: If port 4545 is already in use, use one of these options:
+- **Proxy not starting**: The script automatically finds an available port if the default port is in use. If you want to use a specific port, use:
   ```bash
   ./proxy.sh start --port 8080    # Specify a different port
-  ./proxy.sh start --auto         # Automatically find an available port
   ```
+- **No application info**: Some applications don't provide identifiable User-Agent headers. In these cases, only the URL will be shown without app info.
+- **Connection errors**: If you see HTTP/2 protocol errors in the logs, these are typically normal connection terminations and can be safely ignored.
 
 ## License
 
