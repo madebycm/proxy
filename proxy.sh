@@ -42,6 +42,30 @@ find_available_port() {
 # Create log directory if it doesn't exist
 mkdir -p "$WORK_DIR/logs"
 
+# Function to check logs directory size and ask to clear if needed
+check_logs_size() {
+    # Get logs directory size in bytes
+    if [ -d "$WORK_DIR/logs" ]; then
+        LOGS_SIZE=$(du -sb "$WORK_DIR/logs" | cut -f1)
+        # Convert to MB for display
+        LOGS_SIZE_MB=$(echo "scale=2; $LOGS_SIZE / 1048576" | bc)
+        
+        # Check if size exceeds 1MB (1048576 bytes)
+        if [ "$LOGS_SIZE" -gt 1048576 ]; then
+            echo "[!] Logs directory size: ${LOGS_SIZE_MB}MB (exceeds 1MB)"
+            read -p "Do you want to clear all log files? (y/n): " CLEAR_LOGS
+            if [[ "$CLEAR_LOGS" =~ ^[Yy]$ ]]; then
+                echo "[*] Clearing log files..."
+                rm -f "$WORK_DIR/logs"/*.txt
+                rm -f "$WORK_DIR/logs"/*.log
+                echo "[+] Log files cleared"
+            else
+                echo "[*] Keeping existing log files"
+            fi
+        fi
+    fi
+}
+
 # Function to show usage information
 show_usage() {
     echo "Usage: ./proxy.sh [command] [options]"
@@ -126,6 +150,9 @@ stop_proxy() {
 start_proxy() {
     cd "$WORK_DIR"
     
+    # Check logs directory size
+    check_logs_size
+    
     # Activate virtual environment
     source "$VENV_DIR/bin/activate"
     
@@ -134,7 +161,8 @@ start_proxy() {
     
     # Start mitmproxy in background
     echo "[*] Starting mitmproxy..."
-    mitmdump -v --showhost --flow-detail 3 --listen-port $PROXY_PORT > logs/proxy.log 2>&1 &
+    # Use --no-http2 to prevent URL truncation in HTTP/2 traffic
+    mitmdump -v --showhost --flow-detail 3 --listen-port $PROXY_PORT --no-http2 > logs/proxy.log 2>&1 &
     PROXY_PID=$!
     echo $PROXY_PID > logs/proxy.pid
     
@@ -158,6 +186,9 @@ start_proxy() {
 start_proxy_live() {
     cd "$WORK_DIR"
     
+    # Check logs directory size
+    check_logs_size
+    
     # Activate virtual environment
     source "$VENV_DIR/bin/activate"
     
@@ -172,7 +203,8 @@ start_proxy_live() {
     trap 'echo ""; echo "[*] Interrupted by user"; restore_proxy; exit 0' INT
     
     # Start mitmproxy in foreground
-    mitmdump -v --showhost --flow-detail 3 --listen-port $PROXY_PORT
+    # Use --no-http2 to prevent URL truncation in HTTP/2 traffic
+    mitmdump -v --showhost --flow-detail 3 --listen-port $PROXY_PORT --no-http2
     
     # This will only execute if mitmproxy exits normally
     restore_proxy
@@ -181,6 +213,9 @@ start_proxy_live() {
 # Function to start the proxy in minimal mode (only URLs)
 start_proxy_minimal() {
     cd "$WORK_DIR"
+    
+    # Check logs directory size
+    check_logs_size
     
     # Activate virtual environment
     source "$VENV_DIR/bin/activate"
@@ -197,7 +232,8 @@ start_proxy_minimal() {
     trap 'echo ""; echo "[*] Interrupted by user"; restore_proxy; exit 0' INT
     
     # Start mitmproxy with the custom script to show only URLs
-    mitmdump --listen-port $PROXY_PORT -s "$WORK_DIR/url_only.py"
+    # Use -q to suppress mitmproxy's default output
+    mitmdump --listen-port $PROXY_PORT -s "$WORK_DIR/url_only.py" -q
     
     # This will only execute if mitmproxy exits normally
     restore_proxy

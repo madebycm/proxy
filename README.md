@@ -13,9 +13,10 @@ This tool sets up a man-in-the-middle proxy on your local machine, configures yo
 - Detailed request/response logging
 - Clean shutdown and system restoration
 - Live monitoring modes with real-time output
-- URL-only view for minimal output
+- URL-only view for minimal output (never truncated)
 - Automatic port detection to avoid conflicts
 - Single unified command interface
+- Timestamped log files for each session
 
 ## Requirements
 
@@ -124,11 +125,26 @@ For HTTPS interception to work, you need to install and trust the mitmproxy cert
 
 ### Viewing Logs
 
+#### Real-time Logs
+
 To view the proxy logs in real-time:
 
 ```bash
 tail -f logs/proxy.log
 ```
+
+#### Session Logs
+
+Each session in URL-only mode also creates a timestamped log file in the `logs` directory:
+
+```bash
+ls -l logs/
+# Example: 20250513_132129.txt
+
+cat logs/20250513_132129.txt
+```
+
+These logs contain the full URLs of all requests made during that session.
 
 ### Stopping the Proxy
 
