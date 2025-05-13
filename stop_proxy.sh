@@ -1,6 +1,6 @@
 #!/bin/bash
 # Stop MITM proxy and restore system settings
-WORK_DIR="//Users/0x7f/www/proxy"
+WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$WORK_DIR"
 
 # Kill the proxy process

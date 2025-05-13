@@ -1,6 +1,6 @@
 #!/bin/bash
 # Start MITM proxy and configure system
-WORK_DIR="/Users/0x7f/www/proxy"
+WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$WORK_DIR/venv"
 cd "$WORK_DIR"
 
@@ -16,18 +16,18 @@ networksetup -getsecurewebproxy Wi-Fi > logs/original_https_proxy.txt
 
 # Configure system proxy settings
 echo "[*] Configuring system proxy settings..."
-networksetup -setwebproxy Wi-Fi 127.0.0.1 8080
-networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8080
+networksetup -setwebproxy Wi-Fi 127.0.0.1 4545
+networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 4545
 
 # Enable proxy
 networksetup -setwebproxystate Wi-Fi on
 networksetup -setsecurewebproxystate Wi-Fi on
 
-echo "[+] System proxy configured to use 127.0.0.1:8080"
+echo "[+] System proxy configured to use 127.0.0.1:4545"
 
 # Start mitmproxy in background
 echo "[*] Starting mitmproxy..."
-mitmdump -v --showhost --flow-detail 3 --listen-port 8080 > logs/proxy.log 2>&1 &
+mitmdump -v --showhost --flow-detail 3 --listen-port 4545 > logs/proxy.log 2>&1 &
 PROXY_PID=$!
 echo $PROXY_PID > logs/proxy.pid
 
