@@ -4,6 +4,7 @@ import os
 import datetime
 import sys
 import re
+import json
 
 class UrlOnly:
     def __init__(self):
@@ -26,6 +27,7 @@ class UrlOnly:
         # Print a message to indicate the log file location
         print(f"\n[+] URL logs are being saved to: {self.log_file}")
         print(f"[+] Showing full URLs without truncation")
+        print(f"[+] POST requests will show response data")
         
         # Print blacklisted domains
         if self.blacklisted_domains:
@@ -91,6 +93,67 @@ class UrlOnly:
             if host == domain or host.endswith('.' + domain):
                 return True
         return False
+    
+    def response(self, flow: mitmproxy.http.HTTPFlow):
+        """Handle responses, especially for POST requests"""
+        # Only process POST responses that aren't blacklisted
+        if flow.request.method != "POST":
+            return
+            
+        host = flow.request.host
+        if self.is_blacklisted(host):
+            return
+        
+        # Get response details
+        status_code = flow.response.status_code
+        content_type = flow.response.headers.get("Content-Type", "")
+        
+        # Format response info
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+        response_msg = f"[{timestamp}] └─ Response: {status_code}"
+        
+        # Try to get response body
+        try:
+            response_body = flow.response.text
+            
+            # Limit response body display
+            if len(response_body) > 500:
+                response_body = response_body[:500] + "... (truncated)"
+            
+            # Try to format JSON responses
+            if "application/json" in content_type:
+                try:
+                    json_data = json.loads(flow.response.text)
+                    response_body = json.dumps(json_data, indent=2)[:500]
+                except:
+                    pass
+            
+            # Display response
+            print(f"{response_msg} {content_type}", flush=True)
+            if response_body.strip():
+                # Indent response body
+                indented_body = "\n".join("    " + line for line in response_body.split("\n"))
+                print(indented_body, flush=True)
+                print("", flush=True)  # Empty line for readability
+                
+                # Log to file
+                with open(self.log_file, "a") as f:
+                    f.write(f"{response_msg} {content_type}\n")
+                    f.write(indented_body + "\n\n")
+            else:
+                print("    (empty response)", flush=True)
+                print("", flush=True)
+                
+                with open(self.log_file, "a") as f:
+                    f.write(f"{response_msg} {content_type}\n    (empty response)\n\n")
+                    
+        except Exception as e:
+            error_msg = f"    Error reading response: {str(e)}"
+            print(error_msg, flush=True)
+            print("", flush=True)
+            
+            with open(self.log_file, "a") as f:
+                f.write(f"{response_msg}\n{error_msg}\n\n")
 
 # Configure mitmproxy to use our addon
 addons = [UrlOnly()]
