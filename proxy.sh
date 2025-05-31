@@ -233,7 +233,14 @@ start_proxy_minimal() {
     
     # Start mitmproxy with the custom script to show only URLs
     # Use -q to suppress mitmproxy's default output
-    mitmdump --listen-port $PROXY_PORT -s "$WORK_DIR/url_only.py" -q
+    # Check if interceptor config exists to decide which script to use
+    if [ -f "$WORK_DIR/interceptor.config.yaml" ] && [ -s "$WORK_DIR/interceptor.config.yaml" ]; then
+        # Use interceptor script if config exists and is not empty
+        mitmdump --listen-port $PROXY_PORT -s "$WORK_DIR/url_interceptor.py" -q
+    else
+        # Use simple URL only script
+        mitmdump --listen-port $PROXY_PORT -s "$WORK_DIR/url_only.py" -q
+    fi
     
     # This will only execute if mitmproxy exits normally
     restore_proxy

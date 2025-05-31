@@ -2,3 +2,4 @@ google.com
 codeium.com
 gstatic.com
 googleapis.com
+launchdarkly.com

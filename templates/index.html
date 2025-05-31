@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Monitor</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🔍 Proxy Monitor</h1>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span id="status" class="status-value offline">Offline</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Port:</span>
+                    <span id="port" class="status-value">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Requests:</span>
+                    <span id="request-count" class="status-value">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Uptime:</span>
+                    <span id="uptime" class="status-value">-</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-section">
+                <h2>Proxy Control</h2>
+                <div class="control-group">
+                    <label for="proxy-port">Port:</label>
+                    <input type="number" id="proxy-port" value="4545" min="1024" max="65535">
+                </div>
+                <div class="control-group">
+                    <label for="proxy-mode">Mode:</label>
+                    <select id="proxy-mode">
+                        <option value="minimal">Minimal (URLs only)</option>
+                        <option value="verbose">Verbose (Full details)</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button id="start-btn" class="btn btn-primary">Start Proxy</button>
+                    <button id="stop-btn" class="btn btn-danger" disabled>Stop Proxy</button>
+                    <button id="clear-btn" class="btn btn-secondary">Clear Logs</button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h2>Quick Actions</h2>
+                <button class="btn btn-secondary" onclick="showTab('requests')">View Requests</button>
+                <button class="btn btn-secondary" onclick="showTab('blacklist')">Domain Blacklist</button>
+                <button class="btn btn-secondary" onclick="showTab('interceptor')">Interceptor Rules</button>
+                <button class="btn btn-secondary" onclick="showCertificateInstructions()">Install Certificate</button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('requests')">Requests</button>
+            <button class="tab" onclick="showTab('blacklist')">Blacklist</button>
+            <button class="tab" onclick="showTab('interceptor')">Interceptor</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Requests Tab -->
+            <div id="requests-tab" class="tab-pane active">
+                <div class="request-filters">
+                    <input type="text" id="search-input" placeholder="Search requests...">
+                    <select id="method-filter">
+                        <option value="">All Methods</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="PATCH">PATCH</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="clearRequests()">Clear</button>
+                </div>
+                <div id="request-list" class="request-list">
+                    <div class="empty-state">No requests yet. Start the proxy to begin monitoring.</div>
+                </div>
+            </div>
+
+            <!-- Blacklist Tab -->
+            <div id="blacklist-tab" class="tab-pane">
+                <div class="config-section">
+                    <h3>Domain Blacklist</h3>
+                    <p>Domains listed here will be ignored by the proxy monitor.</p>
+                    <textarea id="blacklist-domains" rows="10" placeholder="Enter one domain per line"></textarea>
+                    <button class="btn btn-primary" onclick="saveBlacklist()">Save Blacklist</button>
+                </div>
+            </div>
+
+            <!-- Interceptor Tab -->
+            <div id="interceptor-tab" class="tab-pane">
+                <div class="config-section">
+                    <h3>Interceptor Rules</h3>
+                    <p>Configure URL patterns to intercept and custom responses.</p>
+                    <div id="interceptor-rules"></div>
+                    <button class="btn btn-primary" onclick="addInterceptorRule()">Add Rule</button>
+                    <button class="btn btn-primary" onclick="saveInterceptorRules()">Save Rules</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Detail Modal -->
+    <div id="request-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Request Details</h2>
+            <div id="request-details"></div>
+        </div>
+    </div>
+
+    <!-- Certificate Instructions Modal -->
+    <div id="cert-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCertModal()">&times;</span>
+            <h2>Certificate Installation</h2>
+            <ol>
+                <li>Make sure the proxy is running</li>
+                <li>Open Safari and navigate to <a href="http://mitm.it" target="_blank">http://mitm.it</a></li>
+                <li>Click on the Apple icon to download the CA certificate</li>
+                <li>Double-click the downloaded certificate</li>
+                <li>In Keychain Access, find the mitmproxy certificate</li>
+                <li>Double-click it and set to "Always Trust"</li>
+                <li>Close and save the changes</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

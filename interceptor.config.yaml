@@ -1,0 +1,39 @@
+# Interceptor Configuration File
+# Each key is a URL pattern (without protocol) to intercept
+# The value is a configuration for how to respond
+
+# Example 1: Simple text response for any request to test.com
+test.com:
+  status: 200
+  content: "Hello world from interceptor"
+  headers:
+    Content-Type: text/plain
+    X-Intercepted: 'true'
+
+# Example 2: JSON response for a specific API endpoint
+api.example.org/v1/users:
+  status: 200
+  content:
+    users:
+      - id: 1
+        name: John Doe
+      - id: 2
+        name: Jane Smith
+  headers:
+    Content-Type: application/json
+    X-Intercepted: 'true'
+
+# Example 3: Simulating an error response
+arrangerking.azurewebsites.net/licenses/validate:
+  status: 500
+  content: "Internal Server Error"
+  headers:
+    Content-Type: text/plain
+    X-Error-Code: 'ERR_INTERNAL'
+
+# Example 4: Empty response with custom status
+empty.example.com:
+  status: 204
+  content: ""
+  headers:
+    X-Empty-Response: 'true'
